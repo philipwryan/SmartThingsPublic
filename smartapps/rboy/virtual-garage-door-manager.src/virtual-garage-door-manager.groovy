@@ -21,13 +21,14 @@
 */ 
 
 def clientVersion() {
-    return "01.04.00"
+    return "01.04.01"
 }
 
 /**
  * Virtual Garage Door Manager
  *
  * Copyright RBoy Apps, redistribution or reuse any code is not allowed without permission
+ * 2018-10-16 - (v01.04.01) Support for new ST app
  * 2018-04-12 - (v01.04.00) Added momemtary switch as an alternative to a relay
  * 2018-04-12 - (v01.03.00) Workaround to reduce logs in recent activity
  * 2018-03-02 - (v01.02.00) Increase relay contact to 2 seconds, 5 beeps with a 1 second delay before closing garage for better safety
@@ -72,7 +73,7 @@ def setupDevices() {
         
         section() {
             label title: "Assign a name for this SmartApp (optional)", required: false
-            input name: "disableUpdateNotifications", title: "Don't check for new versions of the app", type: "bool", required: false
+            input name: "updateNotifications", title: "Check for new versions of the app", type: "bool", defaultValue: true, required: false
         }
     }
 }
@@ -108,7 +109,7 @@ def deviceSettings(params) {
     dynamicPage(name:"deviceSettings", title: "${dev ? dev.displayName : "Controller"} Settings", uninstall: false, install: false) {
         section() {
             if (!dni) {
-                input "name${num}", "string", title:"Name", description: "Controller name", required: true
+                input "name${num}", "text", title:"Name", description: "Controller name", required: true
             }
             
             if (!settings."relaym${num}") {
@@ -514,7 +515,7 @@ def checkForCodeUpdate(evt) {
                 if (appVersion > clientVersion()) {
                     def msg = "New version of app ${app.label} available: $appVersion, current version: ${clientVersion()}.\nPlease visit $serverUrl to get the latest version."
                     log.info msg
-                    if (!disableUpdateNotifications) {
+                    if (updateNotifications != false) { // The default true may not be registered
                         sendPush(msg)
                     }
                 } else {
@@ -530,9 +531,9 @@ def checkForCodeUpdate(evt) {
                             def deviceName = device?.currentValue("dhName")
                             def deviceVersion = ret.data?."$deviceName"
                             if (deviceVersion && (deviceVersion > device?.currentValue("codeVersion"))) {
-                                def msg = "New version of device ${device?.displayName} available: $deviceVersion, current version: ${device?.currentValue("codeVersion")}.\nPlease visit $serverUrl to get the latest version."
+                                def msg = "New version of device handler for ${device?.displayName} available: $deviceVersion, current version: ${device?.currentValue("codeVersion")}.\nPlease visit $serverUrl to get the latest version."
                                 log.info msg
-                                if (!disableUpdateNotifications) {
+                                if (updateNotifications != false) { // The default true may not be registered
                                     sendPush(msg)
                                 }
                             } else {
@@ -551,3 +552,4 @@ def checkForCodeUpdate(evt) {
 }
 
 // THIS IS THE END OF THE FILE
+
